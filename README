@@ -3,7 +3,7 @@ Bennett JEM, Philippides A, Nowotny T (2019), Learning with reinforcement predic
 JOURNAL VOL, PAGES
 
 DOI for this repository:
-https://zenodo.org/badge/DOI/10.5281/zenodo.4438738.svg
+https://doi.org/10.5281/zenodo.4438738
 
 Code Contents:
  - mb_vs.m: code to run multiple alternative forced choice simulations using the VS/VSlambda model
