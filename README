@@ -1,0 +1,49 @@
+This folder contains all code needed to produce the simulation results and the data analyses for the paper:
+Bennett JEM, Philippides A, Nowotny T (2019), Learning with reinforcement prediction errors in a model of the Drosophila mushroom body, 
+JOURNAL VOL, PAGES
+
+Code Contents:
+ - mb_vs.m: code to run multiple alternative forced choice simulations using the VS/VSlambda model
+ - mb_mv_a.m: code to run multiple alternative forced choice simulations using the MV model with overlapping cue representations.
+ - mb_mv_b.m: code to run multiple alternative forced choice simulations using the MV model with overlapping cue representations, in order 
+   to examine how each single Kenyon cell contributes to the reward prediction for a given cue.
+ - mb_mv_c.m: code to run multiple alternative forced choice simulations using the MV model with non-overlapping cue representations and 
+   perfect plasticity.
+ - mb_mv_d.m: code to run multiple alternative forced choice simulations using the MV model with non-overlapping cue representations.
+ - mb_vs_conditioning.m: code to run associative conditioning simulations using the VSlambda model
+ - mb_mv_conditioning.m: code to run associative conditioning simulations using the MV model
+ - mb_vs_conditioning_fels.m: code to simulate the Felsenberg et al. (2017, 2018) re-evaluation experiments using the VSlambda model
+ - mb_mv_conditioning_fels.m: code to simulate the Felsenberg et al. (2017, 2018) re-evaluation experiments using the MV model
+ - mb_mv_blocking.m: code to run simulate blocking experiments using the MV model.
+ - mb_reward_schedules.m: code to generate a specific and parameterised reward schedule for use in the simulations
+ - mb_vs_mv_analysis.m: code to run all data generation and data analysis.
+ - zmy_utils.zip: a zipped package of utility scripts that are called upon for processing and plotting data. Please unzip this file and place all
+   scripts in the Matlab path.
+ 
+Data Contents:
+ - associative_conditioning_data_for_VS_model.mat: simulated VS_lambda model data for Fig. 5 (used for analyses in mb_vs_mv_analysis.m under flag==8)
+ - associative_conditioning_data_for_MV_model_eq7.mat: simulated MV model data for Fig. 5 (used for analyses in mb_vs_mv_analysis.m under flag==8) 
+UPDATE - associative_conditioning_data_for_MV_model_eq8.mat: simulated MV model data for Supp. Fig. 7 (used for analyses in mb_vs_mv_analysis.m under flag==8) 
+ - supptable2.xlsx: collated performance indeces and test statistics for all experimental data used in the study.
+ 
+Dependencies:
+ - All code has been tested using either MATLAB R2012a on OS X 10.7, or MATLAB R2018b on Ubuntu 18.04 LTS. Certain subroutines in 
+ mb_vs_mv_analysis.m make use of MATLAB’s Parallel Computing Toolbox. 
+ - Depending on the version of MATLAB you are using, you may need to uncomment/comment out those lines in which the cluster of workers are 
+ initialised.
+
+Example usage:
+ - First, you must place all .mat files in a directory that is included in the Matlab path, or update the path to include them.
+ - mb_vs_mv_analysis.m is the main wrapper from which all results in the paper are generated.
+ - Before you run mb_vs_mv_analysis, modify the string that is assigned to the variable ‘fpath’. This is the directory in which all 
+ generated data, analyses, and plots will be saved. It is also the directory from which any data will be read in for analysis. 
+ -  mb_vs_mv_analysis.m is divided into subroutines, labelled by the variable ‘flag’. To run, for example, subroutine 2 (produces 
+ Fig. 2a-d in the paper), open MATLAB and run:
+mb_vs_mv_analysis(2);
+ - mb_vs_mv_analysis(8); generates MV model data for Fig. 5.
+ - mb_vs_mv_analysis(9); generates VS_lambdamodel data for Fig. 5. 
+ - mb_vs_mv_analysis(10); analyses the data generated under flag==8 and flag==9 (also provided in the .mat files in this repo) and produces Fig. 5.
+ - A single run of, for example, the VS model (mb_vs.m) takes less than a second (using the reward schedules outlined in the paper). Some 
+ of the more heavy analyses, such as subroutine 8 (generating performance indices for all 96 types of intervention in the associative 
+ conditioning simulations) can take a few hours, depending on the specs of your computer. 
+
