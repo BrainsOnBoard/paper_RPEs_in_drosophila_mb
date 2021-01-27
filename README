@@ -2,9 +2,6 @@ This folder contains all code needed to produce the simulation results and the d
 "Learning with reinforcement prediction errors in a model of the Drosophila mushroom body"
 Authors: Bennett JEM, Philippides A, Nowotny T
 
-DOI for this repository:
-https://doi.org/10.5281/zenodo.4438738
-
 Code Contents:
  - mb_vs.m: code to run multiple alternative forced choice simulations using the VS/VSlambda model
  - mb_mv_a.m: code to run multiple alternative forced choice simulations using the MV model with overlapping cue representations.
