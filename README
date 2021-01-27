@@ -24,10 +24,12 @@ Code Contents:
    scripts in the Matlab path.
  
 Data Contents:
- - associative_conditioning_data_for_VS_model.mat: simulated VS_lambda model data for Fig. 5 (used for analyses in mb_vs_mv_analysis.m under flag==8)
- - associative_conditioning_data_for_MV_model_eq7.mat: simulated MV model data for Fig. 5 (used for analyses in mb_vs_mv_analysis.m under flag==8) 
-UPDATE - associative_conditioning_data_for_MV_model_eq8.mat: simulated MV model data for Supp. Fig. 7 (used for analyses in mb_vs_mv_analysis.m under flag==8) 
- - supptable2.xlsx: collated performance indeces and test statistics for all experimental data used in the study.
+ - associative_conditioning_data_for_VS_model.mat: simulated VS_lambda model data for Fig. 5 and Supp. Fig. 7 (generated using flag==9 in mb_vs_mv_analysis.m)
+ - associative_conditioning_data_for_MV_model_eq7.mat: simulated MV model (Eq. 7) data for Supp. Fig. 7 (generated using flag==8 in mb_vs_mv_analysis.m) 
+ - associative_conditioning_data_for_MV_model_eq8.mat: simulated MV model (Eq. 8) data for Fig. 5 and Supp. Fig. 7 (generated using flag==8 in mb_vs_mv_analysis.m) 
+ - felsenberg_extinction_data_for_both_models.mat: simulated MV model (Eq. 8) for Supp. Fig. 8 (generated using flag==18 in mb_vs_mv_analysis.m)
+ - source_data_1.xlsx: collated performance indeces and test statistics for experimental data used in Fig. 5 and Supp. Fig. 7.
+ - source_data_2.xlsx: collated performance indeces and test statistics for experimental data used in Supp. Fig. 8.
  
 Dependencies:
  - All code has been tested using either MATLAB R2012a on OS X 10.7, or MATLAB R2018b on Ubuntu 18.04 LTS. Certain subroutines in 
