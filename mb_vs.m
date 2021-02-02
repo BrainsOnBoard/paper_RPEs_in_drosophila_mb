@@ -1,8 +1,9 @@
-function out = mb_vs(gamma,seed,nt,rs_flag,epskm,varargin)
+function out = mb_vs(model,gamma,seed,nt,rs_flag,epskm,varargin)
 %
 % Valence specific MB model.
 %
 % Inputs:
+%    model - which type of VS model (VS, VSlambda, VSu_a, VSu_b)
 %    gamma - KC->DAN synaptic weight
 %     seed - an integer, N, that selects a prime number to seed the random
 %            number generator
@@ -14,8 +15,24 @@ function out = mb_vs(gamma,seed,nt,rs_flag,epskm,varargin)
 %  out - struct containing numerous fields (see bottom of script)
 
 %%% Set defaults for optional parameters
-flag_reward_sign = 1;
-flag_plasticity_rule = 1;
+if strcmp(model,'VS')
+  flag_reward_sign = 1; % Excitatory reward
+  flag_plasticity_rule = 0; % delta_w+ ~ (w_k*k - d-)
+  flag_feedback_sign = 1; % Excitatory MBON->DAN
+elseif strcmp(model,'VSlambda')
+  flag_reward_sign = 1; % Excitatory reward
+  flag_plasticity_rule = 1; % delta_w+ ~ (lambda - d-)
+  flag_feedback_sign = 1; % Excitatory MBON->DAN
+elseif strcmp(model,'VSu_a')
+  flag_reward_sign = 0; % Inhibitory reward
+  flag_plasticity_rule = 0; % delta_w+ ~ (w_k*k - d-)
+  flag_feedback_sign = 1; % Excitatory MBON->DAN
+elseif strcmp(model,'VSu_b')
+  flag_reward_sign = 1; % Excitatory reward
+  flag_plasticity_rule = -1; % delta_w+ ~ (d- - w_k*k)
+  flag_feedback_sign = 0; % Inhibitory MBON->DAN
+end;
+
 intervene_id = 0;
 choose1 = false;
 lambda = 11.5;
@@ -86,15 +103,20 @@ wkmap(:,:,1) = 0.1*rand(1,nk);
 wkmav(:,:,1) = 0.1*rand(1,nk);
 wkdap = gamma*ones(1,nk); % KC -> D+
 wkdav = gamma*ones(1,nk); % KC -> D-
-wmdap = 1; % M+ -> D-
-wmdav = 1; % M- -> D+
+if flag_feedback_sign>0
+  wmdap = 1; % M+ -> D-
+  wmdav = 1; % M- -> D+
+else
+  wmdap = -1; % M+ -> D-
+  wmdav = -1; % M- -> D+
+end;
 
 %%% Generate KC responses to cues
 s = zeros(nk,no);
 for j=1:no
 %   s(:,j) = double(rand(nk,1)<sparseness);
+%   s(:,j) = s(:,j) / sum(s(:,j)) * sparseness * nk; 
   s(floor((j-1)*sparseness*nk)+1:floor(j*sparseness*nk),j) = 1;
-%   s(:,j) = s(:,j) / sum(s(:,j)) * sparseness * nk;  
   s(:,j) = s(:,j) / sum(s(:,j)) * 10;  
 end;
 
@@ -128,11 +150,11 @@ for j=1:nt % Loop over trials
     
     go(j,k) = map(j,k);
     nogo(j,k) = mav(j,k);
-    mdiff(k) = map(j,k) - mav(j,k);    
-%     if abs(mdiff(k))>2
-% %       keyboard;
-%       error('MB_VS: reward predictgion too large');
-%     end;
+    if flag_feedback_sign>0
+      mdiff(k) = map(j,k) - mav(j,k);
+    else
+      mdiff(k) = mav(j,k) - map(j,k);
+    end;
   end;   
   
   % Make decision
@@ -140,7 +162,7 @@ for j=1:nt % Loop over trials
     decision(j) = 1;
   else
     for stim=1:no
-      probs(stim) = exp((go(j,stim)-nogo(j,stim))*beta) / sum(exp((go(j,:)-nogo(j,:))*beta));
+      probs(stim) = exp(mdiff(stim)*beta) / sum(exp(mdiff(stim)*beta));
     end;
     probs = probs / sum(probs); % Ensure probs is normalised to 1 (to avoid rounding errors)
     randchoice = rand;
@@ -188,7 +210,10 @@ for j=1:nt % Loop over trials
     if flag_plasticity_rule>0
       wkmap(:,:,j+1) = max(0,wkmap(:,:,j) + epskm * s(:,decision(j))' * (lambda - dav(j)));
       wkmav(:,:,j+1) = max(0,wkmav(:,:,j) + epskm * s(:,decision(j))' * (lambda - dap(j)));
-    else            
+    elseif flag_plasticity_rule<0
+      wkmap(:,:,j+1) = max(0,wkmap(:,:,j) + epskm * s(:,decision(j))' .* (dav(j) - wkdav*s(:,decision(j))));
+      wkmav(:,:,j+1) = max(0,wkmav(:,:,j) + epskm * s(:,decision(j))' .* (dap(j) - wkdap*s(:,decision(j))));
+    else
       wkmap(:,:,j+1) = max(0,wkmap(:,:,j) + epskm * s(:,decision(j))' .* (wkdav*s(:,decision(j)) - dav(j)));
       wkmav(:,:,j+1) = max(0,wkmav(:,:,j) + epskm * s(:,decision(j))' .* (wkdap*s(:,decision(j)) - dap(j)));
     end;

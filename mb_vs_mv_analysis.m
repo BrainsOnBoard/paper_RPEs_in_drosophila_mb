@@ -42,7 +42,7 @@ if flag==1
   dav = zeros(180,10);
   % Generate data
   for j=1:10
-    q = mb_vs(1,j,180,13,2.5e-2,'rewardsign',1,'plasticity_rule',0,'choose1',true);
+    q = mb_vs('VS',1,j,180,13,2.5e-2,'choose1',true);
     go(:,j) = q.go(:,1); nogo(:,j) = q.nogo(:,1);
     dap(:,j) = q.dap; dav(:,j) = q.dav;
     m(:,j) = q.go(:,1) - q.nogo(:,1);
@@ -88,7 +88,7 @@ end;
 if flag==2
   %%%%
   %%%% Fig. 2a-d
-  %%%% VS model limited learning
+  %%%% VSlambda model limited learning
   %%%% Learning rule: dw_x ~ k(lambda - d_y)
   %%%%
   
@@ -105,7 +105,7 @@ if flag==2
   wav = zeros(180,10,10);
   % Generate data
   for j=1:10
-    q = mb_vs(1,j,180,13,2.5e-2,'rewardsign',1,'plasticity_rule',1,'choose1',true,'lambda',11.5);
+    q = mb_vs('VSlambda',1,j,180,13,2.5e-2,'choose1',true,'lambda',11.5);
     go(:,j) = q.go(:,1); nogo(:,j) = q.nogo(:,1);
     dap(:,j) = q.dap; dav(:,j) = q.dav;
     m(:,j) = q.go(:,1) - q.nogo(:,1);
@@ -166,7 +166,7 @@ end;
 if flag==3
   %%%%
   %%%% Fig. 2e & Supplementary Fig. 2
-  %%%% VS model limited learning
+  %%%% VSlambda model limited learning
   %%%% Dependence of learning on KC->DAN synaptic weights (gamma)
   %%%%
   
@@ -183,7 +183,7 @@ if flag==3
   % Generate data
   for j=1:10
     for k=1:5
-      q = mb_vs(wk(k),j,180,13,2.5e-2,'rewardsign',1,'plasticity_rule',1,'choose1',true,'lambda',11.5);
+      q = mb_vs('VSlambda',wk(k),j,180,13,2.5e-2,'choose1',true,'lambda',11.5);
       go(:,j,k) = q.go(:,1); nogo(:,j,k) = q.nogo(:,1);
       dap(:,j,k) = q.dap; dav(:,j,k) = q.dav;
       m(:,j,k) = q.go(:,1) - q.nogo(:,1);
@@ -252,54 +252,92 @@ if flag==4
   % Reward schedule
   rew = mb_reward_schedules(13,1,0,180,2);
   % Allocate memory
-  m = zeros(180,10);
-  go = zeros(180,10);
-  nogo = zeros(180,10);
-  dap = zeros(180,10);
-  dav = zeros(180,10);
+  m = zeros(180,10,2);
+  go = zeros(180,10,2);
+  nogo = zeros(180,10,2);
+  dap = zeros(180,10,2);
+  dav = zeros(180,10,2);
   % Generate data
-  for j=1:10
-    q = mb_vs(1,j,180,13,2.5e-2,0,0,1,'choose1',true); % Setting variable decm = 10.5
-    go(:,j) = q.go(:,1); nogo(:,j) = q.nogo(:,1);
-    dap(:,j) = q.dap; dav(:,j) = q.dav;
-    m(:,j) = q.go(:,1) - q.nogo(:,1);
+  for k=1:2
+    for j=1:10
+      if k==1
+        % Inhibitory rewards
+        q = mb_vs('VSu_a',1,j,180,13,2.5e-2,'choose1',true);
+      elseif k==2
+        % Excitatory rewards
+        q = mb_vs('VSu_b',1,j,180,13,2.5e-2,'choose1',true);
+      end;
+      go(:,j,k) = q.go(:,1); nogo(:,j,k) = q.nogo(:,1);
+      dap(:,j,k) = q.dap; dav(:,j,k) = q.dav;
+      if k==1
+        m(:,j,k) = q.go(:,1) - q.nogo(:,1);
+      elseif k==2
+        m(:,j,k) = q.nogo(:,1) - q.go(:,1);
+      end;
+    end;
   end;
   
-  % Plot rewards and reward predictions
-  myfig(4,7.5);
-  h = plot(rew(:,1),'linewidth',2); set(h,'color',colr1);
-  hold on;
-  h = plot(m,'linewidth',0.2); set(h,'color',colv1);
-  set(gca,'ylim',[-2.2 2.2],'xlim',[0 180],'ytick',0-2:2:2,'xtick',[0 20:20:180],'xticklabel',{'0' [] [] '60' [] [] '120' [] [] '180'},'box','off');
-  myticks; hold off;
-  myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'rewards_and_predictions.eps']);
-  close(gcf);
-  
-  % Plot MBON firing rates
+  % Plot figures
   myfig(2,7.5);
-  h = plot(go,'linewidth',0.2); set(h,'color',colm1);
-  hold on;
-  h = plot(nogo,'linewidth',0.2); set(h,'color',colm2);
-  set(gca,'ylim',[0 2],'xlim',[0 180],'ytick',0:2,'xtick',[0 20:20:180],'xticklabel',{0 [] [] 60 [] [] 120 [] [] 180},'box','off');
-  myticks;
-  myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'mbon_firing_rates_cue1.eps']);
+  h = plot(m(:,:,1) - m(:,:,2),'linewidth',0.2); set(h,'color','k');
+  set(gca,'ylim',[-0.5 0.5],'xlim',[0 180],'ytick',-0.5:0.5:0.5,'xtick',[0 20:20:180],'xticklabel',{'0' [] [] '60' [] [] '120' [] [] '180'},'box','off');
+  myticks; hold off;
+  myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'reward_prediction_difference_VSu_a_b.eps']);
   close(gcf);
   
-  % Plot DAN firing rates
-  myfig(2,7.5);
-  h = plot(dap,'linewidth',0.2); set(h,'color',coldap);
-  hold on;
-  h = plot(dav,'linewidth',0.2); set(h,'color',coldav);
-  set(gca,'ylim',[8.6 11.3],'xlim',[0 180],'ytick',[9 11],'xtick',0:20:180,'xticklabel',{'0' [] [] '60' [] [] '120' [] [] '180'},'box','off');
-  myticks; hold off;
-  myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'DAN_firing_rates_cue1.eps']);
-  
-  % Plot DAN firing rate difference: RPE
-  h = plot(dap-dav,'linewidth',0.2); set(h,'color',coldandiff);
-  set(gca,'ylim',[-1.2 1.2],'xlim',[0 180],'ytick',-1:1,'xtick',0:20:180,'xticklabel',{'0' [] [] '60' [] [] '120' [] [] '180'},'box','off');
-  myticks; hold off;
-  myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'DAN_firing_rate_difference_cue1.eps']);
-  close(gcf);
+  for k=1:2
+    % Plot rewards and reward predictions
+    myfig(4,7.5);
+    h = plot(rew(:,1),'linewidth',2); set(h,'color',colr1);
+    hold on;
+    h = plot(m(:,:,k),'linewidth',0.2); set(h,'color',colv1);
+    set(gca,'ylim',[-2.2 2.2],'xlim',[0 180],'ytick',0-2:2:2,'xtick',[0 20:20:180],'xticklabel',{'0' [] [] '60' [] [] '120' [] [] '180'},'box','off');
+    myticks; hold off;
+    if k==1
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'rewards_and_predictions_a.eps']);
+    elseif k==2
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'rewards_and_predictions_b.eps']);
+    end;
+    close(gcf);
+    
+    % Plot MBON firing rates
+    myfig(2,7.5);
+    h = plot(go(:,:,k),'linewidth',0.2); set(h,'color',colm1);
+    hold on;
+    h = plot(nogo(:,:,k),'linewidth',0.2); set(h,'color',colm2);
+    set(gca,'ylim',[0 2],'xlim',[0 180],'ytick',0:2,'xtick',[0 20:20:180],'xticklabel',{0 [] [] 60 [] [] 120 [] [] 180},'box','off');
+    myticks;
+    if k==1
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'mbon_firing_rates_cue1_a.eps']);
+    elseif k==2
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'mbon_firing_rates_cue1_b.eps']);
+    end;      
+    close(gcf);
+    
+    % Plot DAN firing rates
+    myfig(2,7.5);
+    h = plot(dap(:,:,k),'linewidth',0.2); set(h,'color',coldap);
+    hold on;
+    h = plot(dav(:,:,k),'linewidth',0.2); set(h,'color',coldav);
+    set(gca,'ylim',[8.6 11.3],'xlim',[0 180],'ytick',[9 11],'xtick',0:20:180,'xticklabel',{'0' [] [] '60' [] [] '120' [] [] '180'},'box','off');
+    myticks; hold off;
+    if k==1
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'DAN_firing_rates_cue1_a.eps']);
+    elseif k==2
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'DAN_firing_rates_cue1_b.eps']);
+    end;
+    
+    % Plot DAN firing rate difference: RPE
+    h = plot(dap(:,:,k)-dav(:,:,k),'linewidth',0.2); set(h,'color',coldandiff);
+    set(gca,'ylim',[-1.2 1.2],'xlim',[0 180],'ytick',-1:1,'xtick',0:20:180,'xticklabel',{'0' [] [] '60' [] [] '120' [] [] '180'},'box','off');
+    myticks; hold off;
+    if k==1
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'DAN_firing_rate_difference_cue1_a.eps']);
+    elseif k==2
+      myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'DAN_firing_rate_difference_cue1_b.eps']);
+    end;
+    close(gcf);
+  end;
 end;
 
 if flag==5
@@ -507,10 +545,13 @@ end;
 
 if flag==8
   %%%%
-  %%%% Generate associative conditioning experiment data for MV-Eq.7 model
+  %%%% Generate associative conditioning experiment data for MV-Eq.7 and
+  %%%% MV-Eq.8 models.
   %%%%
-  %%%% To test the Eq. 8 version of the MV model, replace 'eq7' with 'eq8'
-  %%%% on lines 532 and 569 
+  %%%% Choose which plasticity rule to use (Eq. 7 or Eq. 8) by setting 
+  %%%% plasticityEq = 7, or plasticityEq = 8 in line 516.
+  
+  plasticityEq = 7;
   
   % # RNG seeds
   nrep = 1000;
@@ -588,7 +629,11 @@ if flag==8
               % Generate reward schedule
               rew = mb_reward_schedules(12,(it-1)*NC+labindex,0.1,nt,2,rew_amp(rt));
               % Run model
-              q = mb_mv_conditioning((it-1)*NC+labindex,rew,1.25e-2,'intervene_id',intrvn_id(targ),genetic_int(gi),intrvn_schedule,'plasticity_rule','eq7');
+              if plasticityEq==7
+                q = mb_mv_conditioning((it-1)*NC+labindex,rew,1.25e-2,'intervene_id',intrvn_id(targ),genetic_int(gi),intrvn_schedule,'plasticity_rule','eq7');
+              elseif plasticityEq==8
+                q = mb_mv_conditioning((it-1)*NC+labindex,rew,1.25e-2,'intervene_id',intrvn_id(targ),genetic_int(gi),intrvn_schedule,'plasticity_rule','eq8');
+              end;
             end;
             for j=1:min(NC,nrep-(it-1)*NC)
               qq = q{j};
@@ -613,7 +658,11 @@ if flag==8
         % Generate reward schedule
         rew = mb_reward_schedules(12,(it-1)*NC+labindex,0.1,nt,2,rew_amp(rt));
         % Run model
-        q = mb_mv_conditioning((it-1)*NC+labindex,rew,1.25e-2);
+        if plasticityEq==7
+          q = mb_mv_conditioning((it-1)*NC+labindex,rew,1.25e-2,'plasticity_rule','eq7');
+        elseif plasticityEq==8
+          q = mb_mv_conditioning((it-1)*NC+labindex,rew,1.25e-2,'plasticity_rule','eq8');
+        end;
       end;
       for j=1:min(NC,nrep-(it-1)*NC)
         qq = q{j};
@@ -625,7 +674,11 @@ if flag==8
     end;
   end;
   toc
-  save([fpath 'associative_conditioning_data_for_MV_model_eq7.mat'],'pre','dec','cpre','cdec');
+  if plasticityEq==7
+    save([fpath 'associative_conditioning_data_for_MV_model_eq7.mat'],'pre','dec','cpre','cdec');
+  elseif plasticityEq==8
+    save([fpath 'associative_conditioning_data_for_MV_model_eq8.mat'],'pre','dec','cpre','cdec');
+  end;
 end;
 
 if flag==9
@@ -831,7 +884,6 @@ if flag==10
         end;end;end;end;
   
   % Read in experimental PI measures from Excel sheet
-% 	z = xlsread([fpath 'supptable2.xlsx'],'A3:AG167');
   z = xlsread([fpath 'source_data_1.xlsx'],'PIs_all_experiments','A3:AH167');
 
   testtimes = z(:,end);
@@ -1175,7 +1227,7 @@ if flag==13
             q = mb_mv_c(1,(it-1)*NC+labindex,200,rew,'no',nstim(no));
           elseif model==4
             % Non-overlapping KC representations, VS model
-            q = mb_vs(1,(it-1)*NC+labindex,200,rew,1e-1,'no',nstim(no),'lambda',12,'nk',nstim(no)*100);
+            q = mb_vs('VSlambda',1,(it-1)*NC+labindex,200,rew,1e-1,'no',nstim(no),'lambda',12,'nk',nstim(no)*100);
           end;
         end;
         for j=1:min(NC,nrep-(it-1)*NC)
@@ -1620,8 +1672,8 @@ if flag==16
   %%%
   % Examples in condslist to point out in figure, which correspond to the
   % conditions:
-  % condslist(18,:) = [1 3 2 3] -- includes experimental evidence in supptable2
-  % condslist(24,:) = [1 4 2 3] -- includes experimental evidence in supptable2
+  % condslist(18,:) = [1 3 2 3] -- includes experimental evidence in source_data_1.xlsx
+  % condslist(24,:) = [1 4 2 3] -- includes experimental evidence in source_data_1.xlsx
   % condslist(88,:) = [4 3 2 1]
   % condslist(95,:) = [4 4 2 2]
   exampleind = [18, 24, 88, 95];
