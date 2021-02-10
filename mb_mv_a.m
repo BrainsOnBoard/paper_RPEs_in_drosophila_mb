@@ -19,8 +19,8 @@ choose1 = false;
 no = 2;
 period = 100;
 nk = 20; % # KCs
-lambda = 0;
-pr = 'eq7';
+lambda = 10;
+pr = 'eq8';
 %%% Update default parameters with custom options
 if nargin>5
   j = 1;
@@ -51,7 +51,7 @@ if nargin>5
       period = varargin{j+1};
       j = j+2;
     elseif strcmp(varargin{j},'lambda')
-      % If using periodic reward schedule: specifiy the period
+      % Specify constant term in plasticity rule
       lambda = varargin{j+1};
       j = j+2;
     elseif strcmp(varargin{j},'plasticity_rule')
@@ -79,7 +79,7 @@ else % if using a pregenerated reward schedule
 end;
 
 %%% Network setup
-sparseness = 0.5; % KC sparseness
+sparseness = 1/no; % KC sparseness
 % Softmax temperature
 T = 0.2;
 beta = 1 / T;
@@ -99,7 +99,6 @@ wmavdav = 1; % M- -> D-
 %%% Generate KC responses to cues
 s = zeros(nk,no);
 for j=1:no
-%   s(:,j) = double(rand(nk,1)<sparseness);
   s(floor((j-1)*sparseness*nk)+1:floor(j*sparseness*nk),j) = 1;
   s(:,j) = s(:,j) / sum(s(:,j)) * 10;    
 end;
@@ -179,12 +178,14 @@ for j=1:nt  % Loop over trials
   
   % Update KC->MBON weights (except on last trial)
   if j<nt
-    if strcmp(pr,'eq7')
+    if strcmp(pr,'eq8')
       wkmap(:,:,j+1) = max(0,wkmap(:,:,j) + epskm * s(:,decision(j))' .* (dap(j) - dav(j)));
       wkmav(:,:,j+1) = max(0,wkmav(:,:,j) + epskm * s(:,decision(j))' .* (dav(j) - dap(j)));
-    elseif strcmp(pr,'eq8')
-      wkmap(:,:,j+1) = max(0,wkmap(:,:,j) + epskm * s(:,decision(j))' .* (wkdav * s(:,decision(j)) - dav(j)));
-      wkmav(:,:,j+1) = max(0,wkmav(:,:,j) + epskm * s(:,decision(j))' .* (wkdap * s(:,decision(j)) - dap(j)));
+    elseif strcmp(pr,'eq7')
+%       wkmap(:,:,j+1) = max(0,wkmap(:,:,j) + epskm * s(:,decision(j))' .* (wkdav * s(:,decision(j)) - dav(j)));
+%       wkmav(:,:,j+1) = max(0,wkmav(:,:,j) + epskm * s(:,decision(j))' .* (wkdap * s(:,decision(j)) - dap(j)));
+      wkmap(:,:,j+1) = max(0,wkmap(:,:,j) + epskm * s(:,decision(j))' .* (lambda + wkdap * s(:,decision(j)) - dav(j)));
+      wkmav(:,:,j+1) = max(0,wkmav(:,:,j) + epskm * s(:,decision(j))' .* (lambda + wkdap * s(:,decision(j)) - dap(j)));
     end;
   end;
   

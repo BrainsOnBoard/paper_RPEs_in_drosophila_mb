@@ -57,6 +57,7 @@ elseif ID==3
   R = zeros(NT,NO);    
   R = mygfilter((randn(NT,NO)),[timescale 0]);  
   R = amp * R / max(R(:)) + SD * randn(NT,NO);
+%   R = amp * R + SD * randn(NT,NO);
   
 elseif ID==4
   % Square wave
@@ -120,7 +121,7 @@ elseif ID==8
   
 elseif ID==9
   % Ornstein-Uhlenbeck process
-  if nargin>4
+  if nargin>5
     tau = varargin{1};
   else
     tau = 500;
@@ -220,17 +221,16 @@ elseif ID==15
   R(:,2) = amp2 + sd2*randn(NT,1);
 elseif ID==16
   % Reward reversals with a given probability
-  stimes = varargin{1};
+  mstime = varargin{1}; % Mean switch time
+  stimes = unique(ceil(cumsum(random('exp',mstime,NT,1))));
   amp = varargin{2};
-  R = amp * ones(NT,NO);  
+  R = amp * ones(NT,NO);
   R(:,2) = -amp;
   for j=2:length(stimes)
-		R(stimes(j-1)+1:stimes(j),1) = amp * (-1 + 2*mod(j,2));
-		R(stimes(j-1)+1:stimes(j),2) = amp * (1 - 2*mod(j,2));
-	end;
-	if stimes(j)<NT
-		R(stimes(j)+1:end,1) = amp * (-1 + 2*mod(j+1,2));
-		R(stimes(j)+1:end,2) = amp * (1 - 2*mod(j+1,2));
-	end;
+    if stimes(j)<NT
+      R(stimes(j-1)+1:stimes(j),1) = amp * (-1 + 2*mod(j,2));
+      R(stimes(j-1)+1:stimes(j),2) = amp * (1 - 2*mod(j,2));
+    end;
+  end;
   R = R + SD*randn(NT,NO);
 end;

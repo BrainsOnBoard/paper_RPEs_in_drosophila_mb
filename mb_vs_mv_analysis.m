@@ -458,7 +458,7 @@ if flag==6
     wav(:,:,j) = squeeze(q.wkmav(1,1:10,:))';
   end;
   
-  % Plot rewards and reward predicaaamyfig(4,7.5);
+  % Plot rewards and reward predictions
   h = plot(rew(:,1),'linewidth',2); set(h,'color',colr1);
   hold on;
   h = plot(m,'linewidth',0.2); set(h,'color',colv1);
@@ -533,7 +533,7 @@ if flag==6
 end;
 
 %%%
-%%% Compare MV-Eq.7 and VS-lambda (limited learning) models when
+%%% Compare MV-Eq. 8 and VS-lambda (limited learning) models when
 %%% each neuron class is blocked (Shibire) or activated (dTrpA1) during
 %%% different stages of the simulation, for both appetitive (+ve reward)
 %%% and aversive (-ve reward) training paradigms. 4 intervention protocols
@@ -542,7 +542,6 @@ end;
 %%% - Target neuron: M+/M-/D+/D-
 %%% - Genetic intervention: Shibire (block)/dTrpA1(activate)
 %%% - Reward type: aversive/appetitive/none
-
 if flag==8
   %%%%
   %%%% Generate associative conditioning experiment data for MV-Eq.7 and
@@ -551,7 +550,7 @@ if flag==8
   %%%% Choose which plasticity rule to use (Eq. 7 or Eq. 8) by setting 
   %%%% plasticityEq = 7, or plasticityEq = 8 in line 516.
   
-  plasticityEq = 7;
+  plasticityEq = 8;
   
   % # RNG seeds
   nrep = 1000;
@@ -1135,7 +1134,7 @@ if flag==12
   % Reward schedule  
   rew = mb_reward_schedules(3,20,0,250,5,2,10); rew(1:50,:) = [];
   % Run model
-  q = mb_mv_a(1,20,200,rew,2.5e-2,'no',5);
+  q = mb_mv_a(1,20,200,rew,2.5e-2,'no',5,'nk',5*10);
   
   % Plot rewards
   myfig(4,7.5);
@@ -1205,8 +1204,7 @@ if flag==13
   rmse = zeros(length(nstim),nrep); % Root mean squared error between predictions and reinforcements
   nit = floor(nrep/NC) + 1; % # iterations of spmd
   tic;
-% % %   for model=1:4
-  for model=3
+  for model=1:4
     for no=1:length(nstim)
       for it=1:nit
         spmd(min(NC,nrep-(it-1)*NC))
@@ -1218,10 +1216,10 @@ if flag==13
           mrew = sum(prew .* rew,2); % Mean reward (reward x probabiity of choosing rewarding cue (from softmax))
           if model==1
             % Overlapping KC representations, MV model
-            q = mb_mv_a(1,(it-1)*NC+labindex,200,rew,2.5e-2,'no',nstim(no));
+            q = mb_mv_d(1,(it-1)*NC+labindex,200,rew,2.5e-2,'no',nstim(no));
           elseif model==2
             % Non-overlapping KC representations, MV model
-            q = mb_mv_d(1,(it-1)*NC+labindex,200,rew,2.5e-2,'no',nstim(no));
+            q = mb_mv_a(1,(it-1)*NC+labindex,200,rew,2.5e-2,'no',nstim(no),'nk',nstim(no)*10);
           elseif model==3
             % Non-overlapping KC representations, perfect synaptic weight updates
             q = mb_mv_c(1,(it-1)*NC+labindex,200,rew,'no',nstim(no));
@@ -1242,9 +1240,9 @@ if flag==13
             [dum mxind] = find(rew{j}==(max(rew{j},[],2)*ones(1,nstim(no))));
             [s sind] = sort(dum); clear dum s;
             mxind = mxind(sind);
-            percmax(no,(it-1)*NC+j) = mean(mxind == qq.decision) * 100;
+            percmax(no,(it-1)*NC+j) = mean(mxind == qq.decision) * 100; % Percentage of trials in which the most rewarding cue was chosen
             rmse(no,(it-1)*NC+j) = sqrt(mean(mean((rew{j} - (qq.go - qq.nogo)).^2,2),1));
-            prewbeta5(no,(it-1)*NC+j) = mean(max(prew{j},[],2));
+            prewbeta5(no,(it-1)*NC+j) = mean(max(prew{j},[],2)); % Trial averaged probability of choosing the most rewarding cue
           end;          
           obr = qq.sr; % Obtained reward per trial          
           rewpercue4{model}(no,(it-1)*NC+j) = obr / 200;
@@ -1354,7 +1352,7 @@ if flag==14
         spmd(min(NC,nrep-(it-1)*NC))
           rew = mb_reward_schedules(3,(it-1)*NC+labindex,(noise-1)*0.3,250,nstim(no),2,10);
           rew(1:50,:) = [];
-          q1 = mb_mv_d(1,(it-1)*NC+labindex,200,rew,5e-2,'no',nstim(no));
+          q1 = mb_mv_a(1,(it-1)*NC+labindex,200,rew,5e-2,'no',nstim(no),'nk',nstim(no)*10);
           q2 = mb_mv_c(1,(it-1)*NC+labindex,200,rew,'no',nstim(no));
         end;
         for j=1:min(NC,nrep-(it-1)*NC)
@@ -1400,9 +1398,9 @@ if flag==15
   rew = mb_reward_schedules(3,seed,0,250,nstim,2,10);
   rew(1:50,:) = [];
   % Run model
-  q = mb_mv_b(1,seed,50,rew,1e-3,nstim);
+  q = mb_mv_b(1,seed,200,rew,4e-2,nstim);
   
-  %%% Plot panel d
+  %%% Plot panel e
   %%% Each data point: reward prediction contribution from a single KC
   %%% for a single cue, versus the actual reward for that cue
   colcl = zeros(5,3);
@@ -1425,7 +1423,7 @@ if flag==15
   hold off;myticks;
   myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'prediction_vs_reward_per_kc_per_cue.eps']);
   
-  %%% Plot panel e
+  %%% Plot panel f
   %%% Each data point: reward prediction contribution from a single KC
   %%% averaged over all cues, versus the actual mean reward for all cues
   %%% that elicit a response in that KC
@@ -1438,7 +1436,7 @@ if flag==15
   hold off;myticks;
   myprint(gcf,'epsc',[fpath 'flag' num2str(flag) 'prediction_vs_reward_per_kc_averaged_over_cues.eps']);
   
-  %%% Plot panel f
+  %%% Plot panel g
   %%% Each data point: actual reward predictions versus acutal rewards
   %%% for each cue.
   rp = zeros(2000,nstim);

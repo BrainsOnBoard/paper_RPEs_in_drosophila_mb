@@ -1,6 +1,6 @@
 function out = mb_mv_d(gamma,seed,nt,rs_flag,epskm,varargin)
 %
-% Same as mb_mv_a, but stimulus representations in KCs are non-overlapping:
+% Same as mb_mv_a, but stimulus representations in KCs are overlapping:
 % each stimulus elicits a response in a unique set of 100 KCs.
 %
 % Inputs:
@@ -78,7 +78,7 @@ beta = 1 / T;
 %%% Generate KC responses to cues
 s = zeros(nk,no);
 for j=1:no
-  s(floor((j-1)*sparseness*nk)+1:floor(j*sparseness*nk),j) = 1;
+  s(:,j) = double(rand(nk,1)<sparseness);
   s(:,j) = s(:,j) / sum(s(:,j)) * 10;    
 end;
 

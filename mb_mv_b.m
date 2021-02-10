@@ -25,8 +25,8 @@ rng(seeds(seed));
 r = rs_flag;
 
 %%% Network setup
-nk = no * 10; % # KCs
-sparseness = 1 / no; % KC sparseness
+nk = 2000; % # KCs
+sparseness = 0.05; % KC sparseness
 % Softmax temperature
 T = 0.2;
 beta = 1 / T;
@@ -46,7 +46,8 @@ wmavdav = 1; % M- -> D-
 %%% Generate KC responses to cues
 s = zeros(nk,no);
 for j=1:no
-  s(floor((j-1)*sparseness*nk)+1:floor(j*sparseness*nk),j) = 1;
+  s(:,j) = double(rand(nk,1)<sparseness);
+%   s(floor((j-1)*sparseness*nk)+1:floor(j*sparseness*nk),j) = 1;
   s(:,j) = s(:,j) / sum(s(:,j)) * 10;    
 end;
 
